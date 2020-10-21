@@ -2,6 +2,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <iostream>
+#include <utility>
 
 const double EPS = 1e-6;
 
@@ -18,6 +20,10 @@ struct Point {
         return abs(x - another.x) < EPS && abs(y - another.y) < EPS;
     }
 };
+
+double dist(const Point& a, const Point& b) {
+    return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y-b.y));
+}
 
 class Line {
     // ax + by + c = 0
@@ -126,4 +132,91 @@ class Polygon: virtual public Shape {
         }
         return false;
     }
+
+    double perimeter() const override {
+        double ans = 0.0;
+        for (int i = 1; i < this->points.size(); ++i)
+            ans += dist(this->points[i - 1], this->points[i]);
+        ans += dist(this->points[this->points.size() - 1], this->points[0]);
+        return ans;
+    }
+
+    double area() const override {
+        double ans = 0;
+        // sholace formula
+        // pivot - (0. 0)
+        std::vector<Point> buf{this->points};
+        buf.push_back(buf[0]);
+        for (int i = 1; i < buf.size(); ++i)
+            ans += (buf[i].y * buf[i-1].x - buf[i].x * buf[i-1].y);
+        return fabs(ans) / 2;
+    }
+};
+
+class Ellipse: virtual public Shape {
+    Point focus1;
+    Point focus2;
+    double distance;
+    double semi_major_axis;
+    double semi_minor_axis;
+
+ public:
+    Ellipse(const Point& f1, const Point& f2, double d): \
+    focus1(f1), focus2(f2), distance(d) {
+        semi_major_axis = distance / 2;
+        semi_minor_axis = semi_major_axis * \
+                          sqrt(1 - pow(this->eccentricity(), 2));
+    }
+
+    std::pair<Point, Point> focuses() const {
+        return std::make_pair(focus1, focus2);
+    }
+
+    double eccentricity() const {
+        return dist(focus1, focus2) / distance;
+    }
+
+    Point center() const {
+        return Point((focus1.x + focus2.x) / 2, (focus1.y + focus2.y) / 2);
+    }
+
+    bool operator==(const Shape& another) const override {
+        const Ellipse* another_ellipse = dynamic_cast<const Ellipse*>(&another);
+        if (!another_ellipse) {
+            std::cerr << "Bad dynamic cast (shape to ellipse)\n";
+            return false;
+        }
+
+        if (distance != another_ellipse->distance)
+            return false;
+
+        if (this->focuses() == another_ellipse->focuses() || \
+            this->focuses() == std::make_pair(another_ellipse->focus2, \
+            another_ellipse->focus1)) {
+            return true;
+        }
+        return false;
+    }
+
+    double perimeter() const override {
+        return 4.0 * semi_major_axis * \
+               std::comp_ellint_2(this->eccentricity());
+    }
+
+    double area() const override {
+        double pi = atan(1) * 4;
+        return pi * semi_major_axis * semi_minor_axis;
+    }
+};
+
+class Circle: public Ellipse {
+    Point center;
+    double radius;
+
+ public:
+    Circle(const Point& center, double radius): \
+    center(center), radius(radius) {}
+
+    double radius()
+
 };

@@ -2,3 +2,5 @@
 .vscode
 .gitignore
 geometry/src/geo
+geometry/test/my_test.cpp
+geometry/my_run.sh
