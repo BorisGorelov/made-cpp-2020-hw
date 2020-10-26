@@ -1,2 +1,8 @@
 .DS_Store
-
+.gitignore
+.vscode
+vector_operations/test/my_test.cpp
+vector_operations/test/mt
+vector_operations/log
+vector_operations/vector_ops_test
+vector_operations/mt
