@@ -3,14 +3,23 @@
 
 typedef std::function<int (int)> Op;
 
+Op compose(size_t n, Op ops[]) {
+    if (n == 0) {
+        Op op = [] (int n) -> int {return n;};
+        return op;
+    }
+    if (n == 1) {
+        return ops[0];
+    }
 
+    Op buf = [n, ops] (int x) {
+        return compose(n - 1, ops)(ops[n - 1](x));
+    };
 
-Op compose (size_t n, Op ops[]) {
-    /// Your code goes here.
+    return buf;
 }
 
-
-int main () {
+int main() {
     /// Simple tests:
 
     Op op1 =
