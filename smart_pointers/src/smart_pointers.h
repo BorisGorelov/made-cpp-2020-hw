@@ -9,10 +9,6 @@ template <class T>
 class UniquePtr {
  private:
   T* data_ptr = nullptr;
-  void clean() {
-    if (data_ptr)
-      delete data_ptr;
-  }
 
  public:
   using pointer = T*;
@@ -20,7 +16,10 @@ class UniquePtr {
   UniquePtr(const UniquePtr& obj) = delete;
   UniquePtr& operator=(const UniquePtr& obj) = delete;
   explicit UniquePtr(pointer obj_ptr): data_ptr(obj_ptr) {}
-  UniquePtr(UniquePtr&& obj): data_ptr(std::move(obj.data_ptr)) {}
+  UniquePtr(UniquePtr&& another) {
+    data_ptr = another.data_ptr;
+    another.data_ptr = nullptr;
+  }
 
   void swap(UniquePtr& other) noexcept {
     std::swap(this->data_ptr, other.data_ptr);
@@ -51,7 +50,7 @@ class UniquePtr {
   }
 
   ~UniquePtr() {
-    clean();
+    delete data_ptr;
   }
 };
 
@@ -73,18 +72,18 @@ template <class T>
 class SharedPtr {
   friend class WeakPtr<T>;
  private:
-  // T* data_ptr;
   Control_block<T>* block;
 
  public:
-  SharedPtr<T>(): /*data_ptr(nullptr),*/ block(nullptr) {}
+  SharedPtr<T>() {
+    block = new Control_block<T>(nullptr);
+  }
+
   SharedPtr<T>(T* ptr) {
-    // data_ptr = ptr;
     block = new Control_block<T>(ptr);
   }
 
   SharedPtr<T>(const SharedPtr<T>& another) {
-    // data_ptr = another.data_ptr;
     block = another.block;
     (block->shared_counter)++;
   }
@@ -105,7 +104,6 @@ class SharedPtr {
     if (&another == this)
       return *this;
     (another.block->shared_counter)++;
-    // data_ptr = another.data_ptr;
     (block->shared_counter)--;
     if (use_count() == 0)
       this->~SharedPtr();
@@ -118,7 +116,6 @@ class SharedPtr {
   }
 
   void swap(SharedPtr<T>& another) {
-    // std::swap(data_ptr, another.data_ptr);
     std::swap(block, another.block);
   }
 
@@ -161,7 +158,6 @@ template <class T>
 class WeakPtr {
   friend class SharedPtr<T>;
  private:
-  // T* data_ptr;
   Control_block<T>* block;
 
  public:
@@ -204,7 +200,8 @@ class WeakPtr {
   }
 
   int32_t use_count() const noexcept {
-    return block->shared_counter;
+    if (block)
+      return block->shared_counter;
   }
 
   SharedPtr<T> lock() const {
