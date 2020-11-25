@@ -202,6 +202,8 @@ class WeakPtr {
   int32_t use_count() const noexcept {
     if (block)
       return block->shared_counter;
+    else
+      return 0;
   }
 
   SharedPtr<T> lock() const {
